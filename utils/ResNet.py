@@ -309,28 +309,28 @@ class ResNet(nn.Module):
     def _forward_impl(self, x):
         a = {}
         # See note [TorchScript super()]
-        # a['in'] = x # 224
-        x = self.conv1(x) # 112
+        # a['in'] = x
+        x = self.conv1(x) # 64
         # a['conv1'] = x
         if BN:
             x = self.bn1(x)
             # a['bn1'] = x
         x = self.relu(x)
         # a['relu1'] = x
-        x = self.maxpool(x) # 56
+        # x = self.maxpool(x)
         # a['maxpool'] = x
         for i in range(0, len(self.layer1)):
-            x = self.layer1[i](x)[0] # 56
+            x = self.layer1[i](x)[0] # 64
             # a[f'layer1_{i}'] = self.layer1[i](x)[1]
         for i in range(0, len(self.layer2)):
-            x = self.layer2[i](x)[0] # 28
-            # a[f'layer2_{i}'] = self.layer2[i](x)[1]  # 28
+            x = self.layer2[i](x)[0] # 32
+            # a[f'layer2_{i}'] = self.layer2[i](x)[1]  #
         for i in range(0, len(self.layer3)):
-            x = self.layer3[i](x)[0] # 14
-            # a[f'layer3_{i}'] = self.layer3[i](x)[1]  # 14
+            x = self.layer3[i](x)[0] # 16
+            # a[f'layer3_{i}'] = self.layer3[i](x)[1]  #
         for i in range(0, len(self.layer4)):
-            x = self.layer4[i](x)[0] # 7
-            # a[f'layer4_{i}'] = self.layer4[i](x)[1]  # 7
+            x = self.layer4[i](x)[0] # 8
+            # a[f'layer4_{i}'] = self.layer4[i](x)[1]  #
         x = self.avgpool(x)
         # a['avgpool'] = x
         x = torch.flatten(x, 1)

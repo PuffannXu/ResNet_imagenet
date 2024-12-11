@@ -51,7 +51,7 @@ def initialize_model(qn_on=0, fp_on=0, weight_bit=0, output_bit=0, isint=0, clam
     model.fc = torch.nn.Linear(512, n_class)  # 将最后的全连接层改掉
     model = model.to(device)
     print(model)
-    summary(model, input_size=(1, 3, 224, 224))  # 输入大小为 (通道数, 高度, 宽度)
+    summary(model, input_size=(1, 3, 64, 64))  # 输入大小为 (通道数, 高度, 宽度)
     end_time = time.time()
     #print(f"---- exit function【initialize_model】. Using time: {end_time-start_time}s.")
     print()

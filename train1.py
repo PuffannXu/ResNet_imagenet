@@ -17,7 +17,7 @@ import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 SAVE_TB = False
 lr = 0.1
-batch_size = 32
+batch_size = 128
 # Imagenet
 n_class = 200
 n_epochs = 200
