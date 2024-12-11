@@ -16,19 +16,18 @@ import os
 # 参数设置
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 SAVE_TB = False
-lr = 0.1
+lr = 0.01
 batch_size = 128
 # Imagenet
 n_class = 200
 n_epochs = 200
 
-RELOAD_CHECKPOINT = 0
-PATH_TO_PTH_CHECKPOINT = f'checkpoint/ResNet18_fp32_w_bn_w_sym_loss_imagenet.pt'
+RELOAD_CHECKPOINT = 1
+PATH_TO_PTH_CHECKPOINT = f'checkpoint/ResNet18_fp32_w_bn_w_sym_loss_imagenet_1_yhy.pt'
 # 自定义的对称性损失函数
 def symmetry_loss(weights):
     mean_value = torch.mean(weights)
     return torch.abs(mean_value)
-
 def symmetry_loss_model(model):
     loss = 0.0
     for param in model.parameters():
@@ -37,7 +36,7 @@ def symmetry_loss_model(model):
             loss += torch.abs(mean)
     return loss
 def main():
-    model_name = f"ResNet18_fp32_w_bn_w_sym_loss_imagenet_1"
+    model_name = f"ResNet18_fp32_w_bn_w_sym_loss_imagenet_2"
     print(f"current model name is {model_name}")
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"\n=========================== run on {device} ===========================")

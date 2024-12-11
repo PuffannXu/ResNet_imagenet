@@ -71,16 +71,25 @@ def train_and_evaluate(model, train_loader, valid_loader, criterion, my_loss, n_
     if SAVE_TB:
         print('Start Tensorboard with "tensorboard --logdir=runs", view at http://localhost:6006/')
         tb_writer = SummaryWriter(log_dir='/'.join(["output", "tensorboard", model_name]))
-
+    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=5e-4)
     if RELOAD_CHECKPOINT:
         print('\n Reloading checkpoint - pretrained model stored at: {} \n'.format(PATH_TO_PTH_CHECKPOINT))
-        model.load_state_dict(torch.load(PATH_TO_PTH_CHECKPOINT, map_location=device),strict=False)
+        checkpoint = torch.load(PATH_TO_PTH_CHECKPOINT, map_location=device)
+        if 'model_state_dict' in checkpoint:
+            model.load_state_dict(checkpoint['model_state_dict'],strict=False)
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            start_epoch = checkpoint['epoch']
+            print(f"Checkpoint loaded from epoch {start_epoch}")
+        else:
+            model.load_state_dict(checkpoint,strict=False)
+            start_epoch = 1
         t1 = time.time()
         #print(f"---- in function【train_and_evaluate】: RELOAD_CHECKPOINT done. Using time: {t1-start_time}s.")
     else:
         t1 = start_time
+        start_epoch = 1
 
-    for epoch in tqdm(range(1, n_epochs + 1)):
+    for epoch in tqdm(range(start_epoch, start_epoch + n_epochs)):
         train_loss = 0.0
         valid_loss = 0.0
         total_sample = 0
@@ -88,9 +97,31 @@ def train_and_evaluate(model, train_loader, valid_loader, criterion, my_loss, n_
         if counter / 10 == 1:
             counter = 0
             lr = lr * 0.5
-        optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=5e-4)
-        model.train()
+
         PRINT_FLAG = 1
+        model.eval()
+        for data, target in valid_loader:
+            if PRINT_FLAG:
+                t4 = time.time()
+                # print(f"---- in function【train_and_evaluate】: train_loader done. Using time: {t4 - t3}s.")
+            data = data.to(device)
+            target = target.to(device)
+            output = model(data)[0].to(device)
+            loss = criterion(output, target) + 0.001 * my_loss(model)
+            valid_loss += loss.item() * data.size(0)
+            _, pred = torch.max(output, 1)
+            correct_tensor = pred.eq(target.data.view_as(pred))
+            total_sample += data.size(0)
+            right_sample += correct_tensor.sum().item()
+            t5 = time.time()
+            if PRINT_FLAG:
+                # print(f"---- in function【train_and_evaluate】: train_loader done. Using time: {t5 - t4}s.")
+                print()
+                PRINT_FLAG = 0
+        print("Accuracy:", 100 * right_sample / total_sample, "%")
+        accuracy.append(right_sample / total_sample)
+        model.train()
+
         for data, target in train_loader:
             if PRINT_FLAG:
                 t2 = time.time()
@@ -112,27 +143,7 @@ def train_and_evaluate(model, train_loader, valid_loader, criterion, my_loss, n_
         PRINT_FLAG = 1
         t3 = time.time()
         #print(f"---- in function【train_and_evaluate】: train_loader ALL done. Using time: {t3 - t1}s.")
-        model.eval()
-        for data, target in valid_loader:
-            if PRINT_FLAG:
-                t4 = time.time()
-                #print(f"---- in function【train_and_evaluate】: train_loader done. Using time: {t4 - t3}s.")
-            data = data.to(device)
-            target = target.to(device)
-            output = model(data)[0].to(device)
-            loss = criterion(output, target) + 0.001 * my_loss(model)
-            valid_loss += loss.item() * data.size(0)
-            _, pred = torch.max(output, 1)
-            correct_tensor = pred.eq(target.data.view_as(pred))
-            total_sample += data.size(0)
-            right_sample += correct_tensor.sum().item()
-            t5 = time.time()
-            if PRINT_FLAG:
-                #print(f"---- in function【train_and_evaluate】: train_loader done. Using time: {t5 - t4}s.")
-                print()
-                PRINT_FLAG = 0
-        print("Accuracy:", 100 * right_sample / total_sample, "%")
-        accuracy.append(right_sample / total_sample)
+
         train_loss = train_loss / len(train_loader.sampler)
         valid_loss = valid_loss / len(valid_loader.sampler)
         train_losses.append(train_loss)
@@ -144,7 +155,12 @@ def train_and_evaluate(model, train_loader, valid_loader, criterion, my_loss, n_
         if valid_loss <= valid_loss_min:
             print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(valid_loss_min, valid_loss))
             os.makedirs(f'checkpoint', exist_ok=True)
-            torch.save(model.state_dict(), f'checkpoint/{model_name}.pt')
+            checkpoint = {
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+            }
+            torch.save(checkpoint, f'checkpoint/{model_name}.pt')
             valid_loss_min = valid_loss
             counter = 0
         else:
