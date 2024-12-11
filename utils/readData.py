@@ -9,6 +9,7 @@ import os
 from torchvision import datasets, transforms
 from torch.utils.data import Dataset
 from PIL import Image
+import matplotlib.pyplot as plt
 
 # set device
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -62,10 +63,23 @@ class TinyImageNetDataset(Dataset):
             raise IndexError(f"Index {idx} out of range for dataset with length {len(self.images)}")
         img_path = self.images[idx]
         img = Image.open(img_path).convert('RGB')
+        # print(f"Image size: {img.size}")  # Print image dimensions
         if self.transform:
             img = self.transform(img)
         label = self.labels[idx]
         return img, label
+
+def visualize_images(dataset, num_images=5):
+    fig, axes = plt.subplots(1, num_images, figsize=(15, 5))
+    for i in range(num_images):
+        img, label = dataset[i]
+        img = img.permute(1, 2, 0)  # Convert to HWC format for plotting
+        img = img * torch.tensor([0.229, 0.224, 0.225]) + torch.tensor([0.485, 0.456, 0.406])  # Unnormalize
+        img = img.numpy()
+        axes[i].imshow(img)
+        axes[i].set_title(f"Label: {label}")
+        axes[i].axis('off')
+    plt.show()
 
 def read_dataset(batch_size=16,valid_size=0.2,num_workers=0,pic_path='dataset',dataset='CIFAR10'):
     """
@@ -75,12 +89,12 @@ def read_dataset(batch_size=16,valid_size=0.2,num_workers=0,pic_path='dataset',d
     pic_path: The path of the pictrues
     """
     transform_train = transforms.Compose([
-        # transforms.RandomCrop(224, padding=4),  #先四周填充0，在吧图像随机裁剪成32*32
-        transforms.RandomResizedCrop(224),
+        # transforms.RandomCrop(32, padding=4),  #先四周填充0，在吧图像随机裁剪成32*32
+        transforms.RandomResizedCrop(64),
         transforms.RandomHorizontalFlip(),  #图像一半的概率翻转，一半的概率不翻转
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225]), #R,G,B每层的归一化用到的均值和方差
-        Cutout(n_holes=1, length=16),
+        # Cutout(n_holes=1, length=16),
     ])
 
     transform_test = transforms.Compose([
@@ -148,4 +162,7 @@ def read_dataset(batch_size=16,valid_size=0.2,num_workers=0,pic_path='dataset',d
         train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
         valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
         test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+
+    # Visualize some images from Tiny ImageNet
+    # visualize_images(train_data)
     return train_loader,valid_loader,test_loader
