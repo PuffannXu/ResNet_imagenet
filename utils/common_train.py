@@ -143,7 +143,7 @@ def train_and_evaluate(model, train_loader, valid_loader, criterion, my_loss, n_
             epoch, train_loss, valid_loss))
         if valid_loss <= valid_loss_min:
             print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(valid_loss_min, valid_loss))
-            os.makedirs(f'checkpoint/{model_name}.pt', exist_ok=True)
+            os.makedirs(f'checkpoint', exist_ok=True)
             torch.save(model.state_dict(), f'checkpoint/{model_name}.pt')
             valid_loss_min = valid_loss
             counter = 0
