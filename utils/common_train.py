@@ -32,6 +32,7 @@ def initialize_model(qn_on=0, fp_on=0, weight_bit=0, output_bit=0, isint=0, clam
                      quant_type=quant_type,
                      group_number=group_number,
                      left_shift_bit=left_shift_bit)
+    # 第一层3x3 s=2
     if fp_on == 1:
         model.conv1 = my.Conv2d_fp8(in_channels=3, out_channels=64, kernel_size=3, stride=2, padding=1, bias=False)
     elif fp_on == 2:
