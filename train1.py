@@ -22,8 +22,8 @@ batch_size = 128
 n_class = 200
 n_epochs = 200
 
-RELOAD_CHECKPOINT = 1
-PATH_TO_PTH_CHECKPOINT = f'checkpoint/ResNet18_fp32_w_bn_w_sym_loss_imagenet_1_yhy.pt'
+RELOAD_CHECKPOINT = 0
+PATH_TO_PTH_CHECKPOINT = f'checkpoint/ResNet18_fp32_w_bn_w_sym_loss_imagenet_2412111842.pt'
 # 自定义的对称性损失函数
 def symmetry_loss(weights):
     mean_value = torch.mean(weights)
@@ -36,7 +36,7 @@ def symmetry_loss_model(model):
             loss += torch.abs(mean)
     return loss
 def main():
-    model_name = f"ResNet18_fp32_w_bn_w_sym_loss_imagenet_2"
+    model_name = f"ResNet18_fp32_w_bn_w_sym_loss_imagenet224"
     print(f"current model name is {model_name}")
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"\n=========================== run on {device} ===========================")

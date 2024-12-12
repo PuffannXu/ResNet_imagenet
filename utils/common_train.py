@@ -15,7 +15,7 @@ from tqdm import tqdm
 import torch.nn as nn
 import torch.optim as optim
 from utils.readData import read_dataset
-from utils.ResNet import ResNet18
+from utils.ResNet import ResNet18, ResNet18_for_Imagenet
 from torch.utils.tensorboard import SummaryWriter
 import torchvision
 import utils.my_utils as my
@@ -26,7 +26,7 @@ from torchinfo  import summary
 def initialize_model(qn_on=0, fp_on=0, weight_bit=0, output_bit=0, isint=0, clamp_std=0, quant_type="none", group_number=0, left_shift_bit=0, n_class=10, device='cuda'):
     start_time = time.time()
     print("---- in function【initialize_model】")
-    model = ResNet18(qn_on=qn_on,
+    model = ResNet18(num_classes=n_class, qn_on=qn_on,
                      fp_on=fp_on,
                      weight_bit=weight_bit,
                      output_bit=output_bit,
@@ -51,7 +51,7 @@ def initialize_model(qn_on=0, fp_on=0, weight_bit=0, output_bit=0, isint=0, clam
     model.fc = torch.nn.Linear(512, n_class)  # 将最后的全连接层改掉
     model = model.to(device)
     print(model)
-    summary(model, input_size=(1, 3, 64, 64))  # 输入大小为 (通道数, 高度, 宽度)
+    summary(model, input_size=(1, 3, 224, 224))  # 输入大小为 (通道数, 高度, 宽度)
     end_time = time.time()
     #print(f"---- exit function【initialize_model】. Using time: {end_time-start_time}s.")
     print()
