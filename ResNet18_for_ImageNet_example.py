@@ -11,7 +11,7 @@
 from torchinfo import summary
 from utils.ResNet import ResNet18_for_Imagenet
 
-n_class = 200
+n_class = 1000
 
 qn_on = 0
 fp_on = 0
